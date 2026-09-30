@@ -1,0 +1,27 @@
+{
+  "name": "wedding-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akbarabie/wedding-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akbarabie/wedding-tracker/issues"
+  },
+  "homepage": "https://github.com/akbarabie/wedding-tracker#readme",
+  "private": "true",
+  "devDependencies": {
+    "supabase": "^2.118.0"
+  }
+}
