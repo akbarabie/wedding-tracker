@@ -6,4 +6,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+## Konvensi proyek Wedding Tracker
+
+- Komentar kode, pesan log, dan teks antarmuka memakai bahasa Indonesia.
+- Tanpa emoji di kode maupun komentar.
+- Akses data hanya lewat klien Supabase dengan sesi pengguna (lib/supabase/server.ts atau client.ts) agar RLS berlaku. Secret key dilarang dipakai di folder web.
+- Pelindung halaman dan data memakai getClaims, bukan getSession.
+- Semua input pengguna divalidasi dengan Zod sebelum menyentuh database.
+- Perubahan skema hanya lewat berkas migrasi di supabase/migrations.
+
 <!-- END:nextjs-agent-rules -->
