@@ -1,0 +1,88 @@
+.latar {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fff8f3 0%, #fbe6dd 48%, #f7e7c6 100%);
+}
+
+.gumpalan {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  will-change: transform;
+}
+
+.satu {
+  top: -14vmax;
+  left: -10vmax;
+  width: 46vmax;
+  height: 46vmax;
+  background: radial-gradient(circle, #f4c6b8 0%, rgba(244, 198, 184, 0) 70%);
+  animation: melayang-a 22s ease-in-out infinite alternate;
+}
+
+.dua {
+  top: 8vmax;
+  right: -12vmax;
+  width: 42vmax;
+  height: 42vmax;
+  background: radial-gradient(circle, #f2d9a4 0%, rgba(242, 217, 164, 0) 70%);
+  animation: melayang-b 26s ease-in-out infinite alternate;
+}
+
+.tiga {
+  bottom: -16vmax;
+  left: 22vmax;
+  width: 38vmax;
+  height: 38vmax;
+  background: radial-gradient(circle, #f9d5dc 0%, rgba(249, 213, 220, 0) 70%);
+  animation: melayang-c 30s ease-in-out infinite alternate;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.tampil {
+  opacity: 1;
+}
+
+.selubung {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 248, 243, 0.8) 0%,
+    rgba(255, 248, 243, 0.45) 55%,
+    rgba(255, 248, 243, 0.2) 100%
+  );
+}
+
+@keyframes melayang-a {
+  to { transform: translate3d(8vmax, 6vmax, 0) scale(1.12); }
+}
+
+@keyframes melayang-b {
+  to { transform: translate3d(-9vmax, 7vmax, 0) scale(0.92); }
+}
+
+@keyframes melayang-c {
+  to { transform: translate3d(7vmax, -6vmax, 0) scale(1.1); }
+}
+
+/* Hormati pengguna yang mematikan animasi di sistem operasinya */
+@media (prefers-reduced-motion: reduce) {
+  .gumpalan {
+    animation: none;
+  }
+
+  .video {
+    display: none;
+  }
+}
