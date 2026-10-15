@@ -3,46 +3,12 @@
 import { useActionState } from 'react'
 import Link from 'next/link'
 import { daftar, masuk } from './actions'
+import { Kolom } from './kolom'
+import { PesanStatus } from './pesan-status'
+import { Turnstile } from './turnstile'
 import type { StatusForm } from '@/lib/validasi/status-form'
 
 const STATUS_AWAL: StatusForm = {}
-
-type PropsKolom = {
-  id: string
-  label: string
-  type: string
-  autoComplete: string
-  placeholder?: string
-  defaultValue?: string
-  galat?: string
-}
-
-// Satu kolom isian lengkap dengan label dan pesan galatnya
-function Kolom({ id, label, type, autoComplete, placeholder, defaultValue, galat }: PropsKolom) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-[#3B2A26]">
-        {label}
-      </label>
-      <input
-        id={id}
-        name={id}
-        type={type}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        aria-invalid={galat ? true : undefined}
-        aria-describedby={galat ? `${id}-galat` : undefined}
-        className="w-full rounded-lg border border-[#E6D3C9] bg-white/90 px-3.5 py-2.5 text-sm text-[#3B2A26] outline-none transition placeholder:text-[#B3A199] focus:border-[#B8924A] focus:ring-2 focus:ring-[#B8924A]/30 aria-[invalid=true]:border-[#B42318]"
-      />
-      {galat && (
-        <p id={`${id}-galat`} className="text-xs text-[#B42318]">
-          {galat}
-        </p>
-      )}
-    </div>
-  )
-}
 
 export default function FormAuth({ mode }: { mode: 'masuk' | 'daftar' }) {
   const adalahDaftar = mode === 'daftar'
@@ -90,15 +56,20 @@ export default function FormAuth({ mode }: { mode: 'masuk' | 'daftar' }) {
           autoComplete={adalahDaftar ? 'new-password' : 'current-password'}
           galat={status.galatField?.sandi}
         />
-
-        {status.galat && (
-          <p
-            role="alert"
-            className="rounded-lg bg-[#FEF3F2] px-3.5 py-2.5 text-sm text-[#B42318]"
-          >
-            {status.galat}
-          </p>
+        {!adalahDaftar && (
+          <div className="text-right">
+            <Link
+              href="/lupa-sandi"
+              className="text-sm font-medium text-[#9F5C4C] hover:underline"
+            >
+              Lupa kata sandi?
+            </Link>
+          </div>
         )}
+
+        <Turnstile kunciReset={status} />
+
+        <PesanStatus status={status} />
 
         <button
           type="submit"

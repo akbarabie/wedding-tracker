@@ -1,8 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Rute yang boleh dibuka tanpa login
-const RUTE_PUBLIK = ['/masuk', '/daftar']
+// Rute yang boleh dibuka tanpa login. Pengguna yang sudah login dialihkan ke beranda.
+const RUTE_PUBLIK = ['/masuk', '/daftar', '/lupa-sandi', '/tautan-kedaluwarsa']
+
+// Rute yang boleh dibuka siapa pun, sudah login atau belum, tanpa dialihkan.
+// Dipakai untuk /auth/konfirmasi karena tautan email bisa diklik dalam kondisi apa pun.
+const RUTE_TERBUKA = ['/auth']
+
+function cocokRute(path: string, daftar: string[]): boolean {
+  return daftar.some((rute) => path === rute || path.startsWith(`${rute}/`))
+}
 
 // Mengalihkan ke rute lain sambil membawa cookie sesi dan header cache
 // dari respons Supabase, supaya token yang baru disegarkan tidak hilang.
@@ -57,9 +65,13 @@ export async function updateSession(request: NextRequest) {
   const sudahLogin = Boolean(data?.claims)
 
   const path = request.nextUrl.pathname
-  const rutePublik = RUTE_PUBLIK.some(
-    (rute) => path === rute || path.startsWith(`${rute}/`)
-  )
+
+  // Rute terbuka langsung lolos, tetapi sesi tetap sempat disegarkan di atas
+  if (cocokRute(path, RUTE_TERBUKA)) {
+    return responsSupabase
+  }
+
+  const rutePublik = cocokRute(path, RUTE_PUBLIK)
 
   if (!sudahLogin && !rutePublik) {
     return alihkan(request, responsSupabase, '/masuk')
