@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { StatusPembayaran } from './hitung'
+import type { FilterPengeluaran } from '@/lib/validasi/filter-pengeluaran'
 
 export type Cicilan = {
   id: string
@@ -37,17 +38,28 @@ export type OpsiVendor = { id: string; nama: string }
 
 // Hanya entri final yang masuk daftar. Draf hasil ekstraksi nota punya
 // halaman konfirmasi sendiri di tahap berikutnya.
+// Filter opsional dipakai bersama oleh halaman daftar dan ekspor CSV,
+// jadi angka di layar dan di berkas unduhan selalu sama.
 export async function ambilDaftarPengeluaran(
-  weddingId: string
+  weddingId: string,
+  filter: FilterPengeluaran = {}
 ): Promise<PengeluaranDaftar[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  let kueri = supabase
     .from('expenses')
     .select(
       'id, deskripsi, nominal, tanggal, status_pembayaran, vendors(nama), budget_categories(nama), payments(nominal, dibayar_pada)'
     )
     .eq('wedding_id', weddingId)
     .eq('status_entri', 'final')
+
+  // Semua filter dipasang sebelum order, karena order mengubah tipe pembangun kueri
+  if (filter.kategori) kueri = kueri.eq('category_id', filter.kategori)
+  if (filter.vendor) kueri = kueri.eq('vendor_id', filter.vendor)
+  if (filter.dari) kueri = kueri.gte('tanggal', filter.dari)
+  if (filter.sampai) kueri = kueri.lte('tanggal', filter.sampai)
+
+  const { data, error } = await kueri
     .order('tanggal', { ascending: false })
     .order('created_at', { ascending: false })
 

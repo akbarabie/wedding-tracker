@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { wajibPernikahan } from '@/lib/pernikahan/sesi'
 import {
   ambilRingkasanKategori,
@@ -63,7 +64,16 @@ function BarisKategori({ k }: { k: RingkasanKategori }) {
         <div>
           <h3 className="font-medium">{k.nama}</h3>
           <p className="text-xs text-[#6B524B]">
-            {k.jumlah_pengeluaran} pengeluaran
+            {k.jumlah_pengeluaran > 0 ? (
+              <Link
+                href={`/pengeluaran?kategori=${k.category_id}`}
+                className="underline underline-offset-2 transition hover:text-[#9F5C4C]"
+              >
+                {k.jumlah_pengeluaran} pengeluaran, lihat rincian
+              </Link>
+            ) : (
+              '0 pengeluaran'
+            )}
           </p>
         </div>
         <p className="text-sm">

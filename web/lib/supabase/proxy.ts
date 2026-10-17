@@ -74,6 +74,11 @@ export async function updateSession(request: NextRequest) {
   const rutePublik = cocokRute(path, RUTE_PUBLIK)
 
   if (!sudahLogin && !rutePublik) {
+    // Rute API dijawab dengan 401, bukan dialihkan ke halaman HTML login,
+    // karena pemanggilnya butuh status yang jelas.
+    if (path.startsWith('/api/')) {
+      return NextResponse.json({ galat: 'Belum masuk' }, { status: 401 })
+    }
     return alihkan(request, responsSupabase, '/masuk')
   }
   if (sudahLogin && rutePublik) {
