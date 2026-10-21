@@ -1,8 +1,8 @@
 'use client'
 
 import { useActionState } from 'react'
-import { Kolom } from '../kolom'
-import { KolomRupiah } from './kolom-rupiah'
+import { Kolom } from '@/components/kolom'
+import { KolomRupiah } from '@/components/kolom-rupiah'
 import { buatPernikahan, terimaUndangan } from './actions'
 import type { StatusForm } from '@/lib/validasi/status-form'
 

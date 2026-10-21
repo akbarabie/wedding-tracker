@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const TAUTAN = [
   { href: '/', label: 'Ringkasan' },
   { href: '/budget', label: 'Budget' },
+  { href: '/vendor', label: 'Vendor' },
   { href: '/pengeluaran', label: 'Pengeluaran' },
 ]
 

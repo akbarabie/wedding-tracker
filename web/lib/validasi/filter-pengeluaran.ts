@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ambilNilai, susunQuery, type ParamMentah } from './param-url'
 
 // Filter laporan pengeluaran yang dibaca dari parameter URL.
 // Nilai yang tidak valid diabaikan diam-diam, bukan dilempar sebagai galat,
@@ -10,16 +11,8 @@ export type FilterPengeluaran = {
   sampai?: string
 }
 
-type ParamMentah = Record<string, string | string[] | undefined>
-
 const skemaId = z.uuid()
 const skemaTanggal = z.iso.date()
-
-function ambilNilai(nilai: string | string[] | undefined): string | undefined {
-  const satu = Array.isArray(nilai) ? nilai[0] : nilai
-  const bersih = satu?.trim()
-  return bersih ? bersih : undefined
-}
 
 function validasi(
   skema: z.ZodType<string>,
@@ -53,12 +46,5 @@ export function adaFilter(filter: FilterPengeluaran): boolean {
   return Object.values(filter).some(Boolean)
 }
 
-// Menyusun query string dari filter yang sudah tervalidasi.
-// Dipakai untuk tautan unduh CSV supaya selalu sama dengan yang tampil di layar.
-export function susunQuery(filter: FilterPengeluaran): string {
-  const param = new URLSearchParams()
-  for (const [kunci, nilai] of Object.entries(filter)) {
-    if (nilai) param.set(kunci, nilai)
-  }
-  return param.toString()
-}
+// Query string untuk tautan unduh CSV, selalu sama dengan filter di layar
+export { susunQuery }

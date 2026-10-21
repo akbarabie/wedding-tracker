@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Kolom, KELAS_INPUT } from '@/app/(auth)/kolom'
-import { KolomRupiah } from '@/app/(auth)/mulai/kolom-rupiah'
+import { Kolom, KELAS_INPUT } from '@/components/kolom'
+import { formatRupiah } from '@/lib/format'
+import { KolomRupiah } from '@/components/kolom-rupiah'
 import { hapusKategori, tambahKategori, ubahKategori } from './actions'
 import type { StatusForm } from '@/lib/validasi/status-form'
 
@@ -124,7 +125,12 @@ export function AksiKategori({ id, nama, nilaiRencana }: PropsAksi) {
         <form
           action={aksiHapus}
           onSubmit={(e) => {
-            if (!window.confirm(`Hapus kategori "${nama}"?`)) e.preventDefault()
+            if (
+              !window.confirm(
+                `Hapus kategori "${nama}"?\n\nRencana budgetnya (${formatRupiah(nilaiRencana)}) ikut hilang dari ringkasan, dan vendor yang memakai kategori ini menjadi tanpa kategori.\n\nKategori yang masih punya pengeluaran tidak bisa dihapus. Tindakan ini tidak bisa dibatalkan.`
+              )
+            )
+              e.preventDefault()
           }}
         >
           <input type="hidden" name="id" value={id} />

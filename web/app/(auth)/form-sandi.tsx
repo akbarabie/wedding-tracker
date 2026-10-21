@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { aturUlangSandi, mintaResetSandi } from './actions'
-import { KELAS_TOMBOL, Kolom } from './kolom'
+import { KELAS_TOMBOL, Kolom } from '@/components/kolom'
 import { PesanStatus } from './pesan-status'
 import { Turnstile } from './turnstile'
 import type { StatusForm } from '@/lib/validasi/status-form'

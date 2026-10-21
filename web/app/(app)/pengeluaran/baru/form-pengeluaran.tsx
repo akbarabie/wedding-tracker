@@ -1,8 +1,8 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Kolom, KELAS_TOMBOL } from '@/app/(auth)/kolom'
-import { KolomRupiah } from '@/app/(auth)/mulai/kolom-rupiah'
+import { Kolom, KELAS_TOMBOL } from '@/components/kolom'
+import { KolomRupiah } from '@/components/kolom-rupiah'
 import { KolomPilihan } from '@/components/kolom-pilihan'
 import { PesanForm } from '@/components/pesan-form'
 import { VENDOR_BARU } from '@/lib/validasi/pengeluaran'
@@ -13,9 +13,11 @@ type Props = {
   kategori: OpsiKategori[]
   vendor: OpsiVendor[]
   hariIni: string
+  // Isian awal dari tautan, misalnya dari tawaran di halaman vendor
+  awal?: { kategoriId?: string; vendorId?: string; nominal?: string }
 }
 
-export function FormPengeluaran({ kategori, vendor, hariIni }: Props) {
+export function FormPengeluaran({ kategori, vendor, hariIni, awal }: Props) {
   const [status, aksi, sedangProses] = useActionState(buatPengeluaran, {})
   // Dipantau supaya kolom nama vendor baru hanya tampil saat dibutuhkan
   const [vendorId, setVendorId] = useState('')
@@ -28,7 +30,7 @@ export function FormPengeluaran({ kategori, vendor, hariIni }: Props) {
       <KolomPilihan
         id="kategoriId"
         label="Kategori"
-        defaultValue={status.nilaiLama?.kategoriId ?? ''}
+        defaultValue={status.nilaiLama?.kategoriId ?? awal?.kategoriId ?? ''}
         galat={status.galatField?.kategoriId}
       >
         <option value="">Pilih kategori</option>
@@ -51,7 +53,7 @@ export function FormPengeluaran({ kategori, vendor, hariIni }: Props) {
       <KolomPilihan
         id="vendorId"
         label="Vendor"
-        defaultValue={status.nilaiLama?.vendorId ?? ''}
+        defaultValue={status.nilaiLama?.vendorId ?? awal?.vendorId ?? ''}
         galat={status.galatField?.vendorId}
         onChange={setVendorId}
       >
@@ -63,6 +65,9 @@ export function FormPengeluaran({ kategori, vendor, hariIni }: Props) {
         ))}
         <option value={VENDOR_BARU}>+ Vendor baru</option>
       </KolomPilihan>
+      <p className="-mt-2 text-xs text-[#6B524B]">
+        Vendor yang dipilih otomatis berstatus deal setelah pengeluaran disimpan.
+      </p>
 
       {vendorId === VENDOR_BARU && (
         <Kolom
@@ -89,7 +94,7 @@ export function FormPengeluaran({ kategori, vendor, hariIni }: Props) {
       <KolomRupiah
         id="nominal"
         label="Nominal total"
-        defaultValue={status.nilaiLama?.nominal}
+        defaultValue={status.nilaiLama?.nominal ?? awal?.nominal}
         galat={status.galatField?.nominal}
         bantuan="Total yang disepakati dengan vendor. Cicilan diatur setelah disimpan."
       />

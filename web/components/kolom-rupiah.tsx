@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ChangeEvent } from 'react'
-import { KELAS_INPUT } from '../kolom'
+import { KELAS_INPUT } from './kolom'
 
 // Batas 12 digit mengikuti kolom numeric(14,2) di tabel weddings
 const MAKS_DIGIT = 12

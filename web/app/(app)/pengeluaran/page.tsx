@@ -8,7 +8,7 @@ import {
   susunQuery,
 } from '@/lib/validasi/filter-pengeluaran'
 import { formatRupiah, formatTanggalPendek } from '@/lib/format'
-import { Kolom } from '@/app/(auth)/kolom'
+import { Kolom } from '@/components/kolom'
 import { KolomPilihan } from '@/components/kolom-pilihan'
 import { BadgeStatus } from './badge-status'
 

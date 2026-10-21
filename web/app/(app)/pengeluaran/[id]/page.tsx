@@ -140,7 +140,11 @@ export default async function HalamanDetailPengeluaran({
                       nilai={{ id: c.id }}
                       label="Hapus"
                       labelProses="Menghapus..."
-                      konfirmasi={`Hapus cicilan "${c.label}"?`}
+                      konfirmasi={
+                        dibayar
+                          ? `Pembayaran "${c.label}" (${formatRupiah(c.nominal)}) sudah ditandai dibayar.\n\nMenghapusnya akan mengurangi total dibayar dan mengubah status pembayaran pengeluaran ini. Tindakan ini tidak bisa dibatalkan.`
+                          : `Hapus pembayaran "${c.label}" (${formatRupiah(c.nominal)})?\n\nTindakan ini tidak bisa dibatalkan.`
+                      }
                       bahaya
                     />
                   </div>
@@ -195,7 +199,15 @@ export default async function HalamanDetailPengeluaran({
           nilai={{ id: p.id }}
           label="Hapus pengeluaran"
           labelProses="Menghapus..."
-          konfirmasi="Hapus pengeluaran ini beserta seluruh cicilannya?"
+          konfirmasi={`Hapus pengeluaran "${p.deskripsi ?? p.vendors?.nama ?? 'ini'}" senilai ${formatRupiah(p.nominal)}?\n\n${
+            p.payments.length > 0
+              ? `${p.payments.length} jadwal pembayaran ikut terhapus${
+                  h.dibayar > 0
+                    ? `, termasuk ${formatRupiah(h.dibayar)} yang sudah tercatat dibayar`
+                    : ''
+                }.\n\n`
+              : ''
+          }Budget akan dihitung ulang. Tindakan ini tidak bisa dibatalkan.`}
           bahaya
         />
       </section>

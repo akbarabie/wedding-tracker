@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { ambilPernikahanAktif } from '@/lib/pernikahan/kueri'
 import { petakanGalat } from '@/lib/validasi/auth'
+import { pesanGalat } from '@/lib/galat-db'
 import { hariIniWib } from '@/lib/validasi/pernikahan'
 import { susunJadwal, type JenisPembayaran } from '@/lib/pengeluaran/jadwal'
 import {
@@ -29,19 +30,12 @@ async function ambilIdPernikahan(): Promise<string> {
   return pernikahan.id
 }
 
-// Pesan dari trigger dan fungsi database kita sendiri (kode P0001) sudah
-// berbahasa Indonesia dan tidak memuat data pribadi, jadi aman ditampilkan.
-function pesanGalat(
-  error: { code?: string; message: string },
-  cadangan: string
-): string {
-  return error.code === 'P0001' ? error.message : cadangan
-}
-
-// Pengeluaran memengaruhi daftar, detail, dan ringkasan budget
+// Pengeluaran memengaruhi daftar, detail, ringkasan budget, dan status vendor
+// (vendor otomatis berstatus deal saat pengeluarannya tercatat)
 function segarkan() {
   revalidatePath('/pengeluaran', 'layout')
   revalidatePath('/budget')
+  revalidatePath('/vendor', 'layout')
 }
 
 export async function buatPengeluaran(
@@ -275,7 +269,8 @@ export async function ubahStatusCicilan(
 
   if (error) {
     console.error('[ubahStatusCicilan] gagal, kode:', error.code)
-    return { galat: 'Gagal memperbarui cicilan. Coba lagi.' }
+    // Misalnya vendor sudah ditolak sehingga pembayaran tidak boleh ditandai dibayar
+    return { galat: pesanGalat(error, 'Gagal memperbarui cicilan. Coba lagi.') }
   }
   if (!data || data.length === 0) return { galat: 'Cicilan tidak ditemukan.' }
 

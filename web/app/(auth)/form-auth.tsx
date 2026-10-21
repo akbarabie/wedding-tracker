@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import Link from 'next/link'
 import { daftar, masuk } from './actions'
-import { Kolom } from './kolom'
+import { Kolom } from '@/components/kolom'
 import { PesanStatus } from './pesan-status'
 import { Turnstile } from './turnstile'
 import type { StatusForm } from '@/lib/validasi/status-form'

@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react'
+import type { ChangeEvent, HTMLAttributes } from 'react'
 
 // Gaya tombol utama pada form auth
 export const KELAS_TOMBOL =
@@ -15,6 +15,9 @@ type PropsKolom = {
   autoComplete?: string
   placeholder?: string
   defaultValue?: string
+  // Terkontrol: nilai dipegang pemanggil lewat state. Hanya dipakai di dalam komponen klien.
+  value?: string
+  onChange?: (nilai: string) => void
   galat?: string
   // Teks bantuan kecil di bawah kolom, disembunyikan saat ada galat
   bantuan?: string
@@ -31,11 +34,18 @@ export function Kolom({
   autoComplete,
   placeholder,
   defaultValue,
+  value,
+  onChange,
   galat,
   bantuan,
   inputMode,
   min,
 }: PropsKolom) {
+  // Terkontrol atau tidak terkontrol, tidak boleh keduanya sekaligus
+  const propsNilai =
+    value !== undefined
+      ? { value, onChange: (e: ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value) }
+      : { defaultValue }
   const idDeskripsi = galat
     ? `${id}-galat`
     : bantuan
@@ -53,7 +63,7 @@ export function Kolom({
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        defaultValue={defaultValue}
+        {...propsNilai}
         inputMode={inputMode}
         min={min}
         aria-invalid={galat ? true : undefined}

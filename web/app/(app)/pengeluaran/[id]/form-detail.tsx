@@ -3,8 +3,8 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Kolom, KELAS_TOMBOL } from '@/app/(auth)/kolom'
-import { KolomRupiah } from '@/app/(auth)/mulai/kolom-rupiah'
+import { Kolom, KELAS_TOMBOL } from '@/components/kolom'
+import { KolomRupiah } from '@/components/kolom-rupiah'
 import { KolomPilihan } from '@/components/kolom-pilihan'
 import { PesanForm } from '@/components/pesan-form'
 import { formatRupiah } from '@/lib/format'
