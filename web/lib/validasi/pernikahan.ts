@@ -47,6 +47,28 @@ export const skemaBuatPernikahan = z.object({
   budgetTotal,
 })
 
+// Skema untuk halaman pengaturan. Bedanya dengan saat membuat pernikahan: hari H yang
+// sudah lewat tetap diterima selama tidak diubah, supaya pasangan yang hari H-nya sudah
+// terlewat masih bisa mengubah nama atau budget tanpa dipaksa mengganti tanggal.
+// Hari H saat ini diambil dari database oleh Server Action, bukan dari form.
+export function buatSkemaUbahPernikahan(hariHSekarang: string | null) {
+  const tanggal = z
+    .string()
+    .trim()
+    .refine((v) => v === '' || adalahTanggalNyata(v), 'Format tanggal tidak valid')
+    .refine(
+      (v) =>
+        v === '' ||
+        !adalahTanggalNyata(v) ||
+        v === hariHSekarang ||
+        v >= hariIniWib(),
+      'Tanggal hari H tidak boleh sebelum hari ini'
+    )
+    .transform((v) => (v === '' ? null : v))
+
+  return z.object({ namaPasangan, tanggalHariH: tanggal, budgetTotal })
+}
+
 export const skemaUndangan = z.object({
   undanganId: z.uuid('Undangan tidak valid'),
 })

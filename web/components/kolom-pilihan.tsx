@@ -5,6 +5,8 @@ import { KELAS_INPUT } from '@/components/kolom'
 
 type PropsKolomPilihan = {
   id: string
+  // Nama field yang dikirim form. Bawaannya sama dengan id (lihat Kolom)
+  nama?: string
   label: string
   // Tidak terkontrol: nilai awal saja. Cocok untuk form yang kolomnya tidak saling bergantung.
   defaultValue?: string
@@ -21,6 +23,7 @@ type PropsKolomPilihan = {
 // Kolom pilihan (select) dengan label dan pesan galat, tampilannya sama dengan Kolom
 export function KolomPilihan({
   id,
+  nama,
   label,
   defaultValue,
   value,
@@ -30,7 +33,7 @@ export function KolomPilihan({
 }: PropsKolomPilihan) {
   const propsBersama = {
     id,
-    name: id,
+    name: nama ?? id,
     onChange: (e: ChangeEvent<HTMLSelectElement>) => onChange?.(e.target.value),
     'aria-invalid': galat ? true : undefined,
     'aria-describedby': galat ? `${id}-galat` : undefined,

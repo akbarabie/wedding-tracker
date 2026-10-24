@@ -78,7 +78,7 @@ export async function ambilDetailPengeluaran(
   const { data, error } = await supabase
     .from('expenses')
     .select(
-      'id, deskripsi, nominal, tanggal, status_pembayaran, category_id, vendors(nama), budget_categories(nama), payments(id, label, nominal, jatuh_tempo, dibayar_pada, catatan)'
+      'id, deskripsi, nominal, tanggal, status_pembayaran, category_id, vendors(nama), budget_categories(nama), payments(id, jenis, label, nominal, jatuh_tempo, dibayar_pada, catatan)'
     )
     .eq('id', id)
     .eq('wedding_id', weddingId)

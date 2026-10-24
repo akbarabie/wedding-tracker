@@ -8,24 +8,10 @@ import {
   hitungRingkasan,
   labelPeringatan,
   tingkatPeringatan,
-  type TingkatPeringatan,
 } from '@/lib/budget/hitung'
+import { WARNA_BAR, WARNA_TEKS } from '@/lib/budget/warna'
 import { formatRupiah } from '@/lib/format'
 import { AksiKategori, FormTambahKategori } from './form-kategori'
-
-const WARNA_BAR: Record<TingkatPeringatan, string> = {
-  aman: 'bg-[#4F8A5B]',
-  dekat: 'bg-[#B8924A]',
-  lewat: 'bg-[#B42318]',
-  tanpa_rencana: 'bg-[#D9CFCB]',
-}
-
-const WARNA_TEKS: Record<TingkatPeringatan, string> = {
-  aman: 'text-[#2E6B3A]',
-  dekat: 'text-[#8A6A22]',
-  lewat: 'text-[#B42318]',
-  tanpa_rencana: 'text-[#6B524B]',
-}
 
 function Kartu({
   judul,

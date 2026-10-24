@@ -10,6 +10,9 @@ export const KELAS_INPUT =
 
 type PropsKolom = {
   id: string
+  // Nama field yang dikirim form. Bawaannya sama dengan id. Diisi bila id harus unik
+  // per baris (misalnya panel ubah di daftar) sedangkan nama field tetap.
+  nama?: string
   label: string
   type: string
   autoComplete?: string
@@ -29,6 +32,7 @@ type PropsKolom = {
 // Satu kolom isian lengkap dengan label, teks bantuan, dan pesan galatnya
 export function Kolom({
   id,
+  nama,
   label,
   type,
   autoComplete,
@@ -59,7 +63,7 @@ export function Kolom({
       </label>
       <input
         id={id}
-        name={id}
+        name={nama ?? id}
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}

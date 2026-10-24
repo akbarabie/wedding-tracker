@@ -11,6 +11,8 @@ function ambilAngka(teks: string, maksDigit: number): string {
 
 type PropsKolomAngka = {
   id: string
+  // Nama field yang dikirim form. Bawaannya sama dengan id (lihat Kolom)
+  nama?: string
   label: string
   // Nilai awal berupa angka murni, misalnya "400"
   defaultValue?: string
@@ -26,6 +28,7 @@ type PropsKolomAngka = {
 // sama dengan KolomRupiah, jadi isinya tidak ikut ter-reset oleh form action React 19.
 export function KolomAngka({
   id,
+  nama,
   label,
   defaultValue,
   galat,
@@ -54,7 +57,7 @@ export function KolomAngka({
       </label>
 
       {/* Yang dikirim ke server hanya angka murni lewat input tersembunyi */}
-      <input type="hidden" name={id} value={angka} />
+      <input type="hidden" name={nama ?? id} value={angka} />
 
       <input
         id={id}
