@@ -7,12 +7,11 @@ import {
   ambilRingkasanPengeluaranVendor,
 } from '@/lib/vendor/kueri'
 import { ambilKategoriOpsi } from '@/lib/pengeluaran/kueri'
+import { ambilRingkasanTamu } from '@/lib/tamu/kueri'
+import { estimasiKonsumsi, ringkasTamu } from '@/lib/tamu/hitung'
+import { hitungTawaranNominal } from '@/lib/vendor/tawaran'
 import { LABEL_CARA_HITUNG, ringkasBiaya, ringkasHarga } from '@/lib/vendor/label'
-import {
-  biayaDariVendor,
-  hitungBiaya,
-  modelDariVendor,
-} from '@/lib/vendor/hitung'
+import { modelDariVendor } from '@/lib/vendor/hitung'
 import { formatRupiah } from '@/lib/format'
 import { TombolAksi } from '@/components/tombol-aksi'
 import { BadgeStatusVendor } from '../badge-status-vendor'
@@ -58,11 +57,17 @@ export default async function HalamanDetailVendor({
   const tawarkanPengeluaran = v.status === 'deal' && jumlahPengeluaran === 0
   const paramPengeluaran = new URLSearchParams({ vendor: v.id })
   if (v.category_id) paramPengeluaran.set('kategori', v.category_id)
-  // Nominal hanya bisa diisi otomatis untuk harga tetap, karena jenis lain butuh
-  // jumlah yang belum pasti. Total sudah termasuk biaya wajib dan pajak.
-  const totalTetap = hitungBiaya(model, biayaDariVendor(v), null)
-  if (totalTetap.status === 'ok' && totalTetap.total !== null && totalTetap.total > 0) {
-    paramPengeluaran.set('nominal', String(Math.round(totalTetap.total)))
+  // Nominal awal dihitung untuk semua cara hitung selama jumlahnya bisa ditentukan
+  // dengan jujur (lihat lib/vendor/tawaran.ts). Daftar tamu hanya dibaca bila vendor
+  // dihitung per tamu, supaya halaman ini tidak membaca data yang tidak dipakai.
+  const estimasi =
+    tawarkanPengeluaran && v.satuan === 'tamu'
+      ? estimasiKonsumsi(ringkasTamu(await ambilRingkasanTamu(pernikahan.id)))
+      : null
+  const tawaran = tawarkanPengeluaran ? hitungTawaranNominal(v, estimasi) : null
+  // Form pengeluaran hanya menerima nominal sampai 12 digit
+  if (tawaran?.nominal && String(tawaran.nominal).length <= 12) {
+    paramPengeluaran.set('nominal', String(tawaran.nominal))
   }
 
   return (
@@ -108,8 +113,33 @@ export default async function HalamanDetailVendor({
           </p>
           <p className="mt-1 text-xs text-[#6B524B]">
             Catat sekarang supaya budget dan jadwal pembayarannya ikut terhitung.
-            Kategori, vendor, dan nominal (untuk harga tetap) terisi otomatis.
+            Kategori dan vendor terisi otomatis
+            {tawaran?.nominal ? ', begitu juga nominalnya.' : '.'}
           </p>
+          {tawaran?.nominal ? (
+            <div className="mt-2 space-y-1 text-xs text-[#6B524B]">
+              <p className="text-sm font-medium text-[#3B2A26]">
+                Nominal awal: {formatRupiah(tawaran.nominal)}
+              </p>
+              {tawaran.asumsi && <p>{tawaran.asumsi}</p>}
+              {tawaran.peringatan.map((p) => (
+                <p key={p} className="text-[#8A6A22]">
+                  {p}
+                </p>
+              ))}
+              <p>
+                Periksa lagi sebelum disimpan, karena nominal akhir mengikuti
+                kesepakatan atau invoice dari vendor.
+              </p>
+            </div>
+          ) : (
+            tawaran?.alasanKosong && (
+              <p className="mt-2 text-xs text-[#6B524B]">
+                Nominal belum diisi otomatis. {tawaran.alasanKosong} Isi nominalnya
+                sendiri di form.
+              </p>
+            )
+          )}
           <Link
             href={`/pengeluaran/baru?${paramPengeluaran.toString()}`}
             className="mt-3 inline-block rounded-lg bg-[#9F5C4C] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#8A4E40]"

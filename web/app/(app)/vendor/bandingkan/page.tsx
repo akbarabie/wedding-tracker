@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { wajibPernikahan } from '@/lib/pernikahan/sesi'
 import { ambilDaftarVendor, type Vendor } from '@/lib/vendor/kueri'
 import { ambilKategoriOpsi } from '@/lib/pengeluaran/kueri'
+import { ambilRingkasanTamu } from '@/lib/tamu/kueri'
+import { estimasiKonsumsi, ringkasTamu } from '@/lib/tamu/hitung'
+import { daftarPilihanTamu, terapkanTamuBawaan } from '@/lib/vendor/skenario-tamu'
 import {
   DAFTAR_SATUAN,
   LABEL_INPUT_SATUAN,
@@ -67,11 +70,13 @@ export default async function HalamanBandingkan(
   const skenario = bacaSkenario(param)
 
   const { pernikahan } = await wajibPernikahan()
-  const [opsiKategori, semua] = await Promise.all([
+  const [opsiKategori, semua, barisTamu] = await Promise.all([
     ambilKategoriOpsi(pernikahan.id),
     kategoriId
       ? ambilDaftarVendor(pernikahan.id, { kategori: kategoriId }, { denganBiaya: true })
       : Promise.resolve([] as Vendor[]),
+    // Data tamu hanya dibutuhkan bila sebuah kategori sudah dipilih
+    kategoriId ? ambilRingkasanTamu(pernikahan.id) : Promise.resolve([]),
   ])
 
   // Vendor yang sudah ditolak tidak ikut dibandingkan
@@ -80,9 +85,18 @@ export default async function HalamanBandingkan(
   // Setiap kandidat dihitung dengan jumlah untuk satuannya sendiri. Catering memakai
   // jumlah tamu, dokumentasi memakai durasi, dan seterusnya, jadi satu halaman ini
   // berlaku untuk kategori apa pun tanpa bergantung pada nama kategorinya.
+  // Jumlah tamu diisi otomatis dari daftar tamu bila pengguna belum menyentuh kolomnya.
+  // Kunci tamu yang ada di URL, termasuk yang sengaja dikosongkan, selalu dihormati.
+  const estimasi = estimasiKonsumsi(ringkasTamu(barisTamu))
+  const { nilai: nilaiSkenario, bawaan } = terapkanTamuBawaan(
+    skenario.nilai,
+    param.tamu !== undefined,
+    kategoriId ? estimasi : null
+  )
+
   const data: Baris[] = kandidat.map((v) => {
     const model = modelDariVendor(v)
-    const jumlah = model.satuan ? (skenario.nilai[model.satuan] ?? null) : null
+    const jumlah = model.satuan ? (nilaiSkenario[model.satuan] ?? null) : null
     return { v, jumlah, hasil: hitungBiaya(model, biayaDariVendor(v), jumlah) }
   })
 
@@ -90,6 +104,22 @@ export default async function HalamanBandingkan(
   const satuanTerpakai = DAFTAR_SATUAN.filter((s) =>
     kandidat.some((v) => v.satuan === s)
   )
+
+  // Petunjuk tamu hanya relevan bila ada kandidat yang dihitung per tamu
+  const tamuDipakai = satuanTerpakai.includes('tamu')
+  const pilihanTamu = tamuDipakai ? daftarPilihanTamu(estimasi) : []
+  const bawaanAktif = tamuDipakai ? bawaan : null
+
+  // Tautan pilihan cepat mempertahankan kategori dan skenario satuan lain
+  function tautanTamu(jumlahTamu: number): string {
+    const q = new URLSearchParams()
+    if (kategoriId) q.set('kategori', kategoriId)
+    for (const [satuan, nilai] of Object.entries(skenario.nilai)) {
+      if (satuan !== 'tamu') q.set(satuan, String(nilai))
+    }
+    q.set('tamu', String(jumlahTamu))
+    return `/vendor/bandingkan?${q.toString()}`
+  }
 
   // Penanda termurah hanya untuk kandidat yang hasilnya lengkap dan tidak melebihi
   // batas, dan hanya bermakna bila ada minimal dua yang bisa dibandingkan
@@ -151,19 +181,60 @@ export default async function HalamanBandingkan(
 
         {/* Hanya satuan yang dipakai kandidat yang meminta isian */}
         {satuanTerpakai.map((s) => (
-          <KolomAngka
-            key={s}
-            id={s}
-            label={`${LABEL_INPUT_SATUAN[s]} (opsional)`}
-            maksDigit={6}
-            defaultValue={skenario.nilai[s] ? String(skenario.nilai[s]) : ''}
-            galat={
-              skenario.tidakValid[s]
-                ? 'Harus berupa angka lebih dari 0.'
-                : undefined
-            }
-            bantuan="Isi agar total biaya dan harga per satuan bisa dihitung."
-          />
+          // key memuat nilai supaya kolom dibuat ulang saat nilainya berubah lewat
+          // tautan pilihan cepat. KolomAngka menyimpan nilainya di state awal.
+          <div key={`${s}-${nilaiSkenario[s] ?? ''}`} className="space-y-2">
+            <KolomAngka
+              id={s}
+              label={`${LABEL_INPUT_SATUAN[s]} (opsional)`}
+              maksDigit={6}
+              defaultValue={nilaiSkenario[s] ? String(nilaiSkenario[s]) : ''}
+              galat={
+                skenario.tidakValid[s]
+                  ? 'Harus berupa angka lebih dari 0.'
+                  : undefined
+              }
+              bantuan="Isi agar total biaya dan harga per satuan bisa dihitung."
+            />
+            {s === 'tamu' && (
+              <div className="space-y-1 text-xs text-[#6B524B]">
+                {bawaanAktif && (
+                  <p>
+                    Terisi otomatis dari {bawaanAktif.label.toLowerCase()} di halaman
+                    Tamu ({bawaanAktif.nilai} orang). Ubah bila perlu, dan tambahkan
+                    mempelai, keluarga inti, atau panitia bila tidak ada di daftar tamu.
+                    {bawaanAktif.kunci === 'maksimum' &&
+                      ' Perkiraan hadir belum bisa dibuat karena belum ada tamu yang menjawab tegas, jadi dipakai batas atas: semua tamu kecuali yang sudah menyatakan tidak hadir.'}
+                  </p>
+                )}
+                {pilihanTamu.length > 0 ? (
+                  <p>
+                    Pakai angka dari daftar tamu:{' '}
+                    {pilihanTamu.map((p, i) => (
+                      <span key={p.kunci}>
+                        {i > 0 && ', '}
+                        <Link
+                          href={tautanTamu(p.nilai)}
+                          className="text-[#9F5C4C] underline"
+                        >
+                          {p.label} {p.nilai}
+                        </Link>
+                      </span>
+                    ))}
+                    .
+                  </p>
+                ) : (
+                  <p>
+                    Belum ada data tamu.{' '}
+                    <Link href="/tamu" className="text-[#9F5C4C] underline">
+                      Isi daftar tamu
+                    </Link>{' '}
+                    agar jumlah ini bisa terisi otomatis.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         ))}
 
         <div className="sm:col-span-2">
