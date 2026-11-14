@@ -1,4 +1,5 @@
 import type { EstimasiKonsumsi } from '@/lib/tamu/hitung'
+import { ISTILAH_TAMU } from '@/lib/tamu/istilah'
 import type { Satuan } from './label'
 
 // Jembatan antara daftar tamu dan perbandingan vendor (Fase C). Semua fungsi di sini
@@ -13,9 +14,9 @@ export type PilihanTamu = {
 }
 
 const LABEL_PILIHAN: Record<KunciTamu, string> = {
-  pasti: 'Pasti hadir',
-  perkiraan: 'Perkiraan hadir',
-  maksimum: 'Batas atas',
+  pasti: ISTILAH_TAMU.pasti.nama,
+  perkiraan: ISTILAH_TAMU.mungkin.nama,
+  maksimum: ISTILAH_TAMU.maksimal.nama,
 }
 
 // Jumlah tamu yang dipakai bila pengguna belum memilih sendiri. Perkiraan hadir

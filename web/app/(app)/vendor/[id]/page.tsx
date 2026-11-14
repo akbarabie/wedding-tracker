@@ -114,13 +114,26 @@ export default async function HalamanDetailVendor({
           <p className="mt-1 text-xs text-[#6B524B]">
             Catat sekarang supaya budget dan jadwal pembayarannya ikut terhitung.
             Kategori dan vendor terisi otomatis
-            {tawaran?.nominal ? ', begitu juga nominalnya.' : '.'}
+            {tawaran?.nominal ? ', begitu juga perkiraan nominalnya.' : '.'}
           </p>
           {tawaran?.nominal ? (
             <div className="mt-2 space-y-1 text-xs text-[#6B524B]">
               <p className="text-sm font-medium text-[#3B2A26]">
-                Nominal awal: {formatRupiah(tawaran.nominal)}
+                Perkiraan nominal: {formatRupiah(tawaran.nominal)}
               </p>
+              <p>
+                Total yang kemungkinan harus dibayar ke vendor, dihitung dari harga
+                dan biaya yang kamu catat di vendor ini.
+              </p>
+              {tawaran.rincian.length > 1 && (
+                <p>
+                  Rinciannya:{' '}
+                  {tawaran.rincian
+                    .map((r) => `${r.label} ${formatRupiah(r.nilai)}`)
+                    .join(', ')}
+                  .
+                </p>
+              )}
               {tawaran.asumsi && <p>{tawaran.asumsi}</p>}
               {tawaran.peringatan.map((p) => (
                 <p key={p} className="text-[#8A6A22]">
@@ -128,15 +141,15 @@ export default async function HalamanDetailVendor({
                 </p>
               ))}
               <p>
-                Periksa lagi sebelum disimpan, karena nominal akhir mengikuti
-                kesepakatan atau invoice dari vendor.
+                Cek lagi sebelum disimpan. Angka akhir mengikuti kesepakatan atau
+                invoice dari vendor.
               </p>
             </div>
           ) : (
             tawaran?.alasanKosong && (
               <p className="mt-2 text-xs text-[#6B524B]">
-                Nominal belum diisi otomatis. {tawaran.alasanKosong} Isi nominalnya
-                sendiri di form.
+                Perkiraan nominal belum bisa diisi otomatis. {tawaran.alasanKosong}{' '}
+                Isi sendiri di form.
               </p>
             )
           )}

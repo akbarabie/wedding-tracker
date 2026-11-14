@@ -21,12 +21,14 @@ export type Tawaran = {
   asumsi: string | null
   // Hal yang perlu diperhatikan pengguna sebelum memakai nominal ini
   peringatan: string[]
+  // Rincian penyusun nominal (harga, biaya wajib, potongan, pajak), kosong bila nominal null
+  rincian: { label: string; nilai: number }[]
   // Penjelasan mengapa nominal tidak diisi, hanya bila nominal null
   alasanKosong: string | null
 }
 
 function kosong(alasan: string): Tawaran {
-  return { nominal: null, asumsi: null, peringatan: [], alasanKosong: alasan }
+  return { nominal: null, asumsi: null, peringatan: [], rincian: [], alasanKosong: alasan }
 }
 
 export function hitungTawaranNominal(
@@ -52,12 +54,12 @@ export function hitungTawaranNominal(
       bawaan.nilai > model.maksimumUnit
     ) {
       peringatan.push(
-        `Perkiraan tamu (${bawaan.nilai} orang) melebihi batas paket ini (${model.maksimumUnit} tamu).`
+        `Angka "${bawaan.label}" di halaman Tamu (${bawaan.nilai} pax) melebihi batas paket ini (${model.maksimumUnit} tamu).`
       )
     }
   } else if (model.satuan === 'tamu' && bawaan !== null) {
     jumlah = bawaan.nilai
-    asumsi = `Dihitung untuk ${jumlah} tamu (${bawaan.label.toLowerCase()}, dari halaman Tamu).`
+    asumsi = `Dihitung untuk ${jumlah} pax, sesuai angka "${bawaan.label}" di halaman Tamu.`
   } else if (
     model.caraHitung === 'paket_tambahan' &&
     model.jumlahTermasuk !== null &&
@@ -88,6 +90,7 @@ export function hitungTawaranNominal(
     nominal: hasil.total,
     asumsi,
     peringatan: [...peringatan, ...hasil.peringatan],
+    rincian: hasil.rincian,
     alasanKosong: null,
   }
 }

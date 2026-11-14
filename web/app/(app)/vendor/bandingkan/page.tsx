@@ -3,6 +3,7 @@ import { wajibPernikahan } from '@/lib/pernikahan/sesi'
 import { ambilDaftarVendor, type Vendor } from '@/lib/vendor/kueri'
 import { ambilKategoriOpsi } from '@/lib/pengeluaran/kueri'
 import { ambilRingkasanTamu } from '@/lib/tamu/kueri'
+import { ISTILAH_TAMU } from '@/lib/tamu/istilah'
 import { estimasiKonsumsi, ringkasTamu } from '@/lib/tamu/hitung'
 import { daftarPilihanTamu, terapkanTamuBawaan } from '@/lib/vendor/skenario-tamu'
 import {
@@ -200,11 +201,11 @@ export default async function HalamanBandingkan(
               <div className="space-y-1 text-xs text-[#6B524B]">
                 {bawaanAktif && (
                   <p>
-                    Terisi otomatis dari {bawaanAktif.label.toLowerCase()} di halaman
-                    Tamu ({bawaanAktif.nilai} orang). Ubah bila perlu, dan tambahkan
+                    Terisi otomatis dari angka &quot;{bawaanAktif.label}&quot; di halaman
+                    Tamu ({bawaanAktif.nilai} pax). Ubah bila perlu, dan tambahkan
                     mempelai, keluarga inti, atau panitia bila tidak ada di daftar tamu.
                     {bawaanAktif.kunci === 'maksimum' &&
-                      ' Perkiraan hadir belum bisa dibuat karena belum ada tamu yang menjawab tegas, jadi dipakai batas atas: semua tamu kecuali yang sudah menyatakan tidak hadir.'}
+                      ` Angka "${ISTILAH_TAMU.mungkin.nama}" belum bisa dihitung karena belum ada undangan yang menjawab hadir atau tidak hadir, jadi dipakai angka "${ISTILAH_TAMU.maksimal.nama}": semua pax kecuali yang sudah menyatakan tidak hadir.`}
                   </p>
                 )}
                 {pilihanTamu.length > 0 ? (

@@ -16,7 +16,12 @@ import {
 import { LABEL_FASE } from '@/lib/timeline/label'
 import { ambilRingkasanTamu } from '@/lib/tamu/kueri'
 import { estimasiKonsumsi, ringkasTamu } from '@/lib/tamu/hitung'
+import { ISTILAH_TAMU } from '@/lib/tamu/istilah'
 import { ambilPengeluaranBelumLunas } from '@/lib/dashboard/kueri'
+import { ambilDokumen } from '@/lib/administrasi/kueri'
+import { hitungKemajuanAdministrasi } from '@/lib/administrasi/hitung'
+import { ambilItemSeserahan } from '@/lib/seserahan/kueri'
+import { ringkasSeserahan } from '@/lib/seserahan/hitung'
 import {
   JENDELA_JATUH_TEMPO_HARI,
   pembayaranJatuhTempo,
@@ -41,14 +46,19 @@ export default async function HalamanUtama() {
   const hariIni = hariIniWib()
 
   // Empat sumber data tidak saling bergantung, jadi dibaca paralel
-  const [kategori, tugas, barisTamu, pengeluaran] = await Promise.all([
-    ambilRingkasanKategori(pernikahan.id),
-    ambilTugas(pernikahan.id),
-    ambilRingkasanTamu(pernikahan.id),
-    ambilPengeluaranBelumLunas(pernikahan.id),
-  ])
+  const [kategori, tugas, barisTamu, pengeluaran, dokumen, itemSeserahan] =
+    await Promise.all([
+      ambilRingkasanKategori(pernikahan.id),
+      ambilTugas(pernikahan.id),
+      ambilRingkasanTamu(pernikahan.id),
+      ambilPengeluaranBelumLunas(pernikahan.id),
+      ambilDokumen(pernikahan.id),
+      ambilItemSeserahan(pernikahan.id),
+    ])
 
   const budget = hitungRingkasan(kategori, pernikahan.budget_total_resepsi)
+  const berkas = hitungKemajuanAdministrasi(dokumen)
+  const seserahan = ringkasSeserahan(itemSeserahan)
   const kemajuan = hitungKemajuan(tugas)
   const tamu = ringkasTamu(barisTamu)
   const estimasi = estimasiKonsumsi(tamu)
@@ -129,6 +139,36 @@ export default async function HalamanUtama() {
           nilai={String(jumlahMendesak)}
           keterangan={adaTerlambat ? 'ada yang terlambat' : 'tugas dan pembayaran'}
           merah={adaTerlambat}
+        />
+      </section>
+
+      <section
+        aria-label="Persiapan lainnya"
+        className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+      >
+        <KartuStat
+          href="/administrasi"
+          judul="Berkas nikah"
+          nilai={dokumen.length === 0 ? 'Belum ada' : `${berkas.keseluruhan.persen}%`}
+          keterangan={
+            dokumen.length === 0
+              ? 'Mulai dari template berkas'
+              : `CPP ${berkas.cpp.persen}%, CPW ${berkas.cpw.persen}%`
+          }
+        />
+        <KartuStat
+          href="/seserahan"
+          judul="Seserahan"
+          nilai={
+            seserahan.total === 0
+              ? 'Belum ada'
+              : `${seserahan.perStatus.selesai} dari ${seserahan.total} item`
+          }
+          keterangan={
+            seserahan.total === 0
+              ? 'Mulai dari template seserahan'
+              : `Estimasi ${formatRupiah(seserahan.estimasi)}`
+          }
         />
       </section>
 
@@ -303,8 +343,8 @@ export default async function HalamanUtama() {
               <BarKehadiran segmen={segmenTamu(tamu)} />
               <p className="text-xs text-[#6B524B]">
                 {estimasi.perkiraan === null
-                  ? `Batas atas konsumsi ${estimasi.maksimum} orang. Perkiraan muncul setelah ada tamu yang menjawab tegas.`
-                  : `Perkiraan konsumsi ${estimasi.perkiraan} orang, antara ${estimasi.pasti} dan ${estimasi.maksimum} orang.`}
+                  ? `${ISTILAH_TAMU.maksimal.nama} ${estimasi.maksimum} Pax. Angka "${ISTILAH_TAMU.mungkin.nama}" muncul setelah ada undangan yang menjawab hadir atau tidak hadir.`
+                  : `${ISTILAH_TAMU.mungkin.nama} ${estimasi.perkiraan} Pax (${ISTILAH_TAMU.pasti.nama} ${estimasi.pasti}, ${ISTILAH_TAMU.maksimal.nama} ${estimasi.maksimum}).`}
               </p>
             </>
           )}

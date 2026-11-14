@@ -6,10 +6,17 @@ import { KolomAngka } from '@/components/kolom-angka'
 import { KolomPilihan } from '@/components/kolom-pilihan'
 import { PesanForm } from '@/components/pesan-form'
 import {
+  DAFTAR_JENIS_UNDANGAN,
   DAFTAR_KATEGORI_TAMU,
+  DAFTAR_PIHAK,
   DAFTAR_STATUS_RSVP,
+  LABEL_JENIS_UNDANGAN,
   LABEL_KATEGORI_TAMU,
+  LABEL_PIHAK,
   LABEL_STATUS_RSVP,
+  cariSubKategori,
+  subKategoriDari,
+  type Pihak,
 } from '@/lib/tamu/label'
 import type { StatusForm } from '@/lib/validasi/status-form'
 import { tambahTamu, ubahTamu } from './actions'
@@ -23,16 +30,38 @@ type Props = {
   saatBerhasil?: () => void
 }
 
+// Untuk pendamping, nama pihaknya lebih mudah dipahami dengan sebutan Bridesmaids dan Groomsmen
+function labelPilihanPihak(pihak: Pihak, subKunci: string): string {
+  if (subKunci === 'pendamping') {
+    if (pihak === 'cpw') return 'CPW (Bridesmaids, pendamping calon pengantin wanita)'
+    if (pihak === 'cpp') return 'CPP (Groomsmen, pendamping calon pengantin pria)'
+  }
+  return LABEL_PIHAK[pihak]
+}
+
 export function FormTamu({ id, awal, saatBerhasil }: Props) {
   // Versi dinaikkan setelah tambah berhasil supaya form dibuat ulang dan isiannya kosong
   const [versi, setVersi] = useState(0)
+
+  const nilaiAwal = (kunci: string) => awal?.[kunci] ?? ''
+
+  // Tiga pilihan ini saling bergantung, jadi dipegang sebagai state (terkontrol)
+  const [kategori, setKategori] = useState(nilaiAwal('kategori') || 'keluarga')
+  const [sub, setSub] = useState(nilaiAwal('subKategori'))
+  const [pihak, setPihak] = useState(nilaiAwal('pihak'))
 
   const [status, aksi, sedangProses] = useActionState(
     async (sebelumnya: StatusForm, formData: FormData) => {
       const hasil = await (id ? ubahTamu : tambahTamu)(sebelumnya, formData)
       if (hasil.info) {
-        if (id) saatBerhasil?.()
-        else setVersi((v) => v + 1)
+        if (id) {
+          saatBerhasil?.()
+        } else {
+          setKategori('keluarga')
+          setSub('')
+          setPihak('')
+          setVersi((v) => v + 1)
+        }
       }
       return hasil
     },
@@ -43,6 +72,25 @@ export function FormTamu({ id, awal, saatBerhasil }: Props) {
   const galat = (kunci: string) => status.galatField?.[kunci]
   // Id unik per form supaya label tidak bentrok saat beberapa panel ubah terbuka
   const idUnik = (kunci: string) => (id ? `${kunci}-${id}` : kunci)
+
+  const daftarSub = subKategoriDari(kategori)
+  const subTerpilih = cariSubKategori(kategori, sub)
+  // Sebelum sub-kategori dipilih semua pihak tampil. Sesudahnya hanya yang diizinkan.
+  const pihakTersedia: readonly Pihak[] = subTerpilih?.pihak ?? DAFTAR_PIHAK
+
+  function saatKategoriBerubah(baru: string) {
+    setKategori(baru)
+    // Sub-kategori milik kategori lama tidak berlaku lagi
+    setSub('')
+  }
+
+  function saatSubBerubah(baru: string) {
+    setSub(baru)
+    const diizinkan = cariSubKategori(kategori, baru)?.pihak ?? DAFTAR_PIHAK
+    // Pihak otomatis terpilih bila hanya ada satu pilihan, dan dikosongkan bila tidak lagi sah
+    if (diizinkan.length === 1) setPihak(diizinkan[0])
+    else if (!(diizinkan as readonly string[]).includes(pihak)) setPihak('')
+  }
 
   // Dikirim lewat onSubmit, bukan form action, supaya React 19 tidak mereset
   // pilihan select setelah Server Action selesai (lihat catatan di KolomPilihan).
@@ -72,12 +120,65 @@ export function FormTamu({ id, awal, saatBerhasil }: Props) {
           id={idUnik('kategori')}
           nama="kategori"
           label="Kategori"
-          defaultValue={nilai('kategori') || 'keluarga'}
+          value={kategori}
+          onChange={saatKategoriBerubah}
           galat={galat('kategori')}
         >
           {DAFTAR_KATEGORI_TAMU.map((k) => (
             <option key={k} value={k}>
               {LABEL_KATEGORI_TAMU[k]}
+            </option>
+          ))}
+        </KolomPilihan>
+
+        <div className="space-y-1.5">
+          <KolomPilihan
+            id={idUnik('subKategori')}
+            nama="subKategori"
+            label="Sub-kategori"
+            value={sub}
+            onChange={saatSubBerubah}
+            galat={galat('subKategori')}
+          >
+            <option value="">Pilih sub-kategori</option>
+            {daftarSub.map((s) => (
+              <option key={s.kunci} value={s.kunci}>
+                {s.label}
+              </option>
+            ))}
+          </KolomPilihan>
+          {subTerpilih?.keterangan && (
+            <p className="text-xs text-[#6B524B]">{subTerpilih.keterangan}</p>
+          )}
+        </div>
+
+        <KolomPilihan
+          id={idUnik('pihak')}
+          nama="pihak"
+          label="Pihak"
+          value={pihak}
+          onChange={setPihak}
+          galat={galat('pihak')}
+        >
+          <option value="">Pilih pihak</option>
+          {pihakTersedia.map((p) => (
+            <option key={p} value={p}>
+              {labelPilihanPihak(p, sub)}
+            </option>
+          ))}
+        </KolomPilihan>
+
+        <KolomPilihan
+          id={idUnik('jenisUndangan')}
+          nama="jenisUndangan"
+          label="Jenis undangan"
+          defaultValue={nilai('jenisUndangan')}
+          galat={galat('jenisUndangan')}
+        >
+          <option value="">Pilih jenis undangan</option>
+          {DAFTAR_JENIS_UNDANGAN.map((j) => (
+            <option key={j} value={j}>
+              {LABEL_JENIS_UNDANGAN[j]}
             </option>
           ))}
         </KolomPilihan>
@@ -105,18 +206,18 @@ export function FormTamu({ id, awal, saatBerhasil }: Props) {
           bantuan="Berapa orang yang diundang lewat undangan ini, 1 sampai 20."
           galat={galat('jumlahOrang')}
         />
-
-        <Kolom
-          id={idUnik('kontak')}
-          nama="kontak"
-          label="Kontak (boleh dikosongkan)"
-          type="text"
-          autoComplete="off"
-          placeholder="Nomor telepon atau akun"
-          defaultValue={nilai('kontak')}
-          galat={galat('kontak')}
-        />
       </div>
+
+      <Kolom
+        id={idUnik('kontak')}
+        nama="kontak"
+        label="Kontak (boleh dikosongkan)"
+        type="text"
+        autoComplete="off"
+        placeholder="Nomor telepon atau akun"
+        defaultValue={nilai('kontak')}
+        galat={galat('kontak')}
+      />
 
       <PesanForm status={status} />
 

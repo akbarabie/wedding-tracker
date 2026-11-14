@@ -1,7 +1,11 @@
 import {
+  DAFTAR_JENIS_UNDANGAN,
   DAFTAR_KATEGORI_TAMU,
+  DAFTAR_PIHAK,
   DAFTAR_STATUS_RSVP,
+  type JenisUndangan,
   type KategoriTamu,
+  type Pihak,
   type StatusRsvp,
 } from './label'
 
@@ -72,6 +76,17 @@ export type EstimasiKonsumsi = {
   // Perkiraan realistis: yang pasti hadir ditambah sisa yang belum pasti dikali rasio.
   // Dibulatkan ke atas supaya konsumsi tidak kurang. Null bila rasio belum bisa dihitung.
   perkiraan: number | null
+  // Bahan untuk menjelaskan cara hitung kepada pengguna
+  // Orang yang sudah menjawab tegas (hadir atau tidak hadir)
+  sudahMenjawab: number
+  // Orang yang masih ragu atau belum menjawab
+  belumPasti: number
+  // Dari yang belum pasti, berapa yang dianggap datang. Null bila perkiraan belum bisa dihitung.
+  tambahan: number | null
+  // Jumlah undangan (baris tamu), dipakai untuk menjelaskan angka dalam bahasa sehari-hari
+  undanganHadir: number
+  undanganMenjawab: number
+  undanganBelumPasti: number
 }
 
 // Estimasi jumlah konsumsi (PRD 6.4). Jumlah kehadiran aktual biasanya jauh di bawah
@@ -94,5 +109,66 @@ export function estimasiKonsumsi(ringkasan: RingkasanTamu): EstimasiKonsumsi {
       ? null
       : Math.min(maksimum, hadir + Math.ceil(belumPasti * rasioKehadiran))
 
-  return { pasti: hadir, maksimum, rasioKehadiran, perkiraan }
+  return {
+    pasti: hadir,
+    maksimum,
+    rasioKehadiran,
+    perkiraan,
+    sudahMenjawab,
+    belumPasti,
+    tambahan: perkiraan === null ? null : perkiraan - hadir,
+    undanganHadir: ringkasan.perStatus.hadir.undangan,
+    undanganMenjawab:
+      ringkasan.perStatus.hadir.undangan + ringkasan.perStatus.tidak_hadir.undangan,
+    undanganBelumPasti:
+      ringkasan.perStatus.ragu.undangan + ringkasan.perStatus.belum_konfirmasi.undangan,
+  }
+}
+
+// Satu baris dari view ringkasan_undangan_tamu (dikelompokkan per pihak dan jenis undangan)
+export type BarisRingkasanUndangan = {
+  pihak: string | null
+  jenis_undangan: string | null
+  jumlah_undangan: number | string
+  jumlah_orang: number | string
+}
+
+// "belum" berarti kolomnya masih kosong, yaitu tamu lama yang belum dilengkapi
+export type KunciPihak = Pihak | 'belum'
+export type KunciJenis = JenisUndangan | 'belum'
+
+export type RingkasanUndangan = {
+  perPihak: Record<KunciPihak, Hitungan>
+  perJenis: Record<KunciJenis, Hitungan>
+  // Satu baris tamu dihitung satu lembar undangan cetak, berapa pun jumlah orangnya
+  perluDicetak: number
+  // Undangan yang dikirim lewat tautan digital
+  kirimDigital: number
+}
+
+// Menjumlahkan baris view menjadi kuota per pihak, jumlah per jenis undangan, serta
+// berapa lembar yang perlu dicetak dan berapa yang dikirim digital.
+export function ringkasUndangan(baris: BarisRingkasanUndangan[]): RingkasanUndangan {
+  const perPihak = kosong([...DAFTAR_PIHAK, 'belum'] as const)
+  const perJenis = kosong([...DAFTAR_JENIS_UNDANGAN, 'belum'] as const)
+
+  for (const b of baris) {
+    const kunciPihak = (b.pihak ?? 'belum') as KunciPihak
+    const kunciJenis = (b.jenis_undangan ?? 'belum') as KunciJenis
+    if (!(kunciPihak in perPihak) || !(kunciJenis in perJenis)) continue
+
+    const undangan = Number(b.jumlah_undangan)
+    const orang = Number(b.jumlah_orang)
+    perPihak[kunciPihak].undangan += undangan
+    perPihak[kunciPihak].orang += orang
+    perJenis[kunciJenis].undangan += undangan
+    perJenis[kunciJenis].orang += orang
+  }
+
+  return {
+    perPihak,
+    perJenis,
+    perluDicetak: perJenis.cetak.undangan + perJenis.cetak_digital.undangan,
+    kirimDigital: perJenis.digital.undangan + perJenis.cetak_digital.undangan,
+  }
 }

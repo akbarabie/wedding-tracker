@@ -10,6 +10,8 @@ const TAUTAN = [
   { href: '/pengeluaran', label: 'Pengeluaran' },
   { href: '/timeline', label: 'Timeline' },
   { href: '/tamu', label: 'Tamu' },
+  { href: '/administrasi', label: 'Administrasi' },
+  { href: '/seserahan', label: 'Seserahan' },
 ]
 
 export function NavUtama() {

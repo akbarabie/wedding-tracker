@@ -4,9 +4,12 @@ import { useState, useTransition, type ChangeEvent } from 'react'
 import { TombolAksi } from '@/components/tombol-aksi'
 import {
   DAFTAR_STATUS_RSVP,
-  LABEL_KATEGORI_TAMU,
+  LABEL_JENIS_UNDANGAN,
   LABEL_STATUS_RSVP,
+  labelTamu,
+  type JenisUndangan,
   type KategoriTamu,
+  type Pihak,
   type StatusRsvp,
 } from '@/lib/tamu/label'
 import { hapusTamu, ubahStatusRsvp } from './actions'
@@ -27,6 +30,10 @@ export type DataTamu = {
   id: string
   nama: string
   kategori: KategoriTamu
+  // Kosong pada tamu lama yang belum dirinci
+  subKategori: string | null
+  pihak: Pihak | null
+  jenisUndangan: JenisUndangan | null
   kontak: string | null
   statusRsvp: StatusRsvp
   jumlahOrang: number
@@ -91,8 +98,22 @@ export function BarisTamu({ tamu }: { tamu: DataTamu }) {
         <div className="min-w-0">
           <p className="font-medium">{tamu.nama}</p>
           <p className="text-xs text-[#6B524B]">
-            {LABEL_KATEGORI_TAMU[tamu.kategori]}, {tamu.jumlahOrang} orang
+            {labelTamu(tamu.kategori, tamu.subKategori, tamu.pihak)},{' '}
+            {tamu.jumlahOrang} orang
             {tamu.kontak && `, ${tamu.kontak}`}
+          </p>
+          <p className="mt-1">
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                tamu.jenisUndangan
+                  ? 'bg-[#F1E9E5] text-[#6B524B]'
+                  : 'border border-dashed border-[#D9CFCB] text-[#8C7A73]'
+              }`}
+            >
+              {tamu.jenisUndangan
+                ? `Undangan ${LABEL_JENIS_UNDANGAN[tamu.jenisUndangan]}`
+                : 'Jenis undangan belum diisi'}
+            </span>
           </p>
         </div>
 
@@ -128,6 +149,9 @@ export function BarisTamu({ tamu }: { tamu: DataTamu }) {
             awal={{
               nama: tamu.nama,
               kategori: tamu.kategori,
+              subKategori: tamu.subKategori ?? '',
+              pihak: tamu.pihak ?? '',
+              jenisUndangan: tamu.jenisUndangan ?? '',
               kontak: tamu.kontak ?? '',
               jumlahOrang: String(tamu.jumlahOrang),
               statusRsvp: tamu.statusRsvp,
