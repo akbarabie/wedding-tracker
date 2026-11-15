@@ -22,3 +22,22 @@ export function formatTanggalPendek(tanggal: string): string {
     timeZone: 'UTC',
   }).format(new Date(`${tanggal}T00:00:00Z`))
 }
+
+// Waktu lengkap untuk daftar unggahan, selalu menurut zona Jakarta
+// karena server Vercel berjalan di UTC. Contoh keluaran: "14 Nov 2026, 10.30".
+export function formatWaktuWib(isoWaktu: string): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Jakarta',
+  }).format(new Date(isoWaktu))
+}
+
+
+// Ukuran berkas yang mudah dibaca, contoh: "9,4 MB" atau "620 KB"
+export function formatUkuran(byte: number): string {
+  if (byte >= 1024 * 1024) {
+    return `${(byte / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+  }
+  return `${Math.max(1, Math.round(byte / 1024))} KB`
+}

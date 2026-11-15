@@ -8,6 +8,7 @@ const TAUTAN = [
   { href: '/budget', label: 'Budget' },
   { href: '/vendor', label: 'Vendor' },
   { href: '/pengeluaran', label: 'Pengeluaran' },
+  { href: '/nota', label: 'Nota' },
   { href: '/timeline', label: 'Timeline' },
   { href: '/tamu', label: 'Tamu' },
   { href: '/administrasi', label: 'Administrasi' },
